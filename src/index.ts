@@ -12,17 +12,18 @@ function getFields(info: any) {
   return [...fields];
 }
 
-function getWheres(info: any): any[] {
+function getWheres(args: any): any[] {
   const wheres: { field: string; value: string; operator: string }[] = [];
-  info.fieldNodes.map((fieldNode: any) => {
-    fieldNode.arguments.map((val: any) => {
-      const field = val.name.value;
-      const value = val.value.value;
-      if (field !== 'limit') {
-        wheres.push({ field, value, operator: '=' });
-      }
-    });
-  });
+  // info.fieldNodes.map((fieldNode: any) => {
+  //   fieldNode.arguments.map((val: any) => {
+  //     const field = val.name.value;
+  //     const value = val.value.value;
+  //     if (field !== 'limit') {
+  //       wheres.push({ field, value, operator: '=' });
+  //     }
+  //   });
+  // });
+  Object.entries(args).map(([field,value]: any) => wheres.push({field, value, operator: "="}));
   return wheres;
 }
 
@@ -49,7 +50,7 @@ class Salesforce {
     this.conn = props.conn;
   }
 
-  public query = (parent: { [key: string]: string }, info: any) => {
+  public query = (parent: { [key: string]: string }, info: any, args: any) => {
     const queryBuilder = new SOQL(info.returnType.ofType || info.returnType).select(
       getFields(info)
     );
@@ -59,7 +60,7 @@ class Salesforce {
       queryBuilder.limit(limit);
     }
 
-    const wheres = getWheres(info);
+    const wheres = getWheres(args);
 
     wheres.map(({ field, operator, value }) => queryBuilder.where(field, operator, value));
     Object.keys(parent).map((key: string) => queryBuilder.where(key, '=', parent[key]));
